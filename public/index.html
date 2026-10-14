@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A local AI assistant for mapping two CSV files and checking receivables against receipts with traceable, deterministic arithmetic.">
+    <meta name="theme-color" content="#123c3b">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <title>Receivable Check · Local AI, traceable numbers</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/app.js" type="module"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Receivable Check home">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M8 6h16v20H8z"/><path d="m12 16 3 3 6-7"/></svg></span>
+        <span>Receivable<span class="brand-light">Check</span></span>
+      </a>
+      <div class="header-actions">
+        <span class="local-badge"><span class="local-dot" aria-hidden="true"></span><span data-i18n="localBadge">Local-first workspace</span></span>
+        <button id="language-toggle" data-testid="language-toggle" class="language-button" type="button" aria-label="Switch language to Chinese">中文</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="hero" aria-labelledby="page-title">
+        <div class="hero-copy">
+          <p class="eyebrow" data-i18n="eyebrow">THE WEEKLY CHECK, WITH A PAPER TRAIL</p>
+          <h1 id="page-title" data-i18n="title">The numbers should add up.<br>When they don’t, know why.</h1>
+          <p class="hero-description" data-i18n="description">Bring your orders and receipts. Local AI suggests the columns; you confirm them. Exact arithmetic finds the differences, with every result linked to its source rows.</p>
+        </div>
+        <aside class="model-card" aria-label="Local model status">
+          <div class="model-card-heading"><span class="model-orbit" aria-hidden="true">◌</span><span data-i18n="modelHeading">OPEN MODEL · ON THIS MACHINE</span></div>
+          <strong id="model-name">Qwen3 · 4B</strong>
+          <div id="model-state" class="model-status pending" role="status" aria-live="polite" data-testid="model-state">Checking local model…</div>
+          <p data-i18n="modelNote">CSV analysis uses this app and your loopback Ollama service. No hosted AI API.</p>
+          <button type="button" id="refresh-model" class="text-button" data-testid="refresh-model" data-i18n="refreshModel">Check connection ↗</button>
+        </aside>
+      </section>
+
+      <div id="notice" class="notice hidden" role="status" aria-live="polite"></div>
+
+      <nav class="steps" aria-label="Workflow">
+        <div id="step-import" class="step current"><span class="step-number">01</span><span data-i18n="stepImport">Bring two CSVs</span></div>
+        <span class="step-line" aria-hidden="true"></span>
+        <div id="step-map" class="step"><span class="step-number">02</span><span data-i18n="stepMap">Confirm the meaning</span></div>
+        <span class="step-line" aria-hidden="true"></span>
+        <div id="step-review" class="step"><span class="step-number">03</span><span data-i18n="stepReview">Review the evidence</span></div>
+      </nav>
+
+      <section class="import-section" aria-labelledby="import-heading">
+        <div class="section-heading">
+          <div><p class="section-kicker" data-i18n="importKicker">01 / THE SOURCE FILES</p><h2 id="import-heading" data-i18n="importHeading">Start with the two sides of the story.</h2></div>
+          <button type="button" id="load-demo" data-testid="load-demo" class="button secondary"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 4h8v12H6zM8 7h4M8 10h4M8 13h3"/></svg><span data-i18n="loadDemo">Load synthetic demo</span></button>
+        </div>
+        <p class="section-description" data-i18n="uploadLimits">UTF-8 CSV · up to 2 MiB and 5,000 rows per file · synthetic demo contains no real merchant data</p>
+        <div class="source-grid">
+          <article class="source-card" id="orders-card">
+            <div class="source-title"><span class="source-icon orders-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 7h6M9 11h6M9 15h3"/></svg></span><div><h3 data-i18n="ordersTitle">Orders · amount due</h3><p data-i18n="ordersSubtitle">What you expected to receive</p></div><span class="source-letter" aria-hidden="true">A</span></div>
+            <label class="drop-zone" id="orders-drop" for="orders-file" tabindex="0">
+              <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 21V7m-5 5 5-5 5 5M7 21v5h18v-5"/></svg>
+              <strong id="orders-file-label" data-i18n="chooseOrders">Choose orders CSV</strong>
+              <span id="orders-file-info" data-i18n="dropHint">or drop a file here</span>
+              <input class="file-input" id="orders-file" data-testid="orders-file" type="file" accept=".csv,text/csv">
+            </label>
+            <div id="orders-preview" class="file-preview hidden"></div>
+            <div id="orders-mapping" class="mapping-panel hidden">
+              <div class="mapping-heading"><strong data-i18n="mapFields">Map the three fields</strong><span id="orders-map-status" class="tiny-status"></span></div>
+              <div class="mapping-fields" id="orders-fields"></div>
+              <div class="mapping-buttons"><button id="orders-mapping-btn" data-testid="orders-mapping-btn" class="button ai-button" type="button"><span aria-hidden="true">✧</span><span data-i18n="suggestMapping">Suggest with local AI</span></button><button id="orders-mapping-confirm" data-testid="orders-mapping-confirm" class="button mapping-confirm" type="button" data-i18n="confirmMapping">Confirm mapping</button></div>
+              <p id="orders-ai-meta" class="ai-meta" aria-live="polite"></p>
+            </div>
+          </article>
+          <article class="source-card" id="receipts-card">
+            <div class="source-title"><span class="source-icon receipts-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 7h18v13H3zM3 11h18M16 16h2M7 7V4h10v3"/></svg></span><div><h3 data-i18n="receiptsTitle">Receipts · amount received</h3><p data-i18n="receiptsSubtitle">What the payment report says</p></div><span class="source-letter" aria-hidden="true">B</span></div>
+            <label class="drop-zone" id="receipts-drop" for="receipts-file" tabindex="0">
+              <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 21V7m-5 5 5-5 5 5M7 21v5h18v-5"/></svg>
+              <strong id="receipts-file-label" data-i18n="chooseReceipts">Choose receipts CSV</strong>
+              <span id="receipts-file-info" data-i18n="dropHint">or drop a file here</span>
+              <input class="file-input" id="receipts-file" data-testid="receipts-file" type="file" accept=".csv,text/csv">
+            </label>
+            <div id="receipts-preview" class="file-preview hidden"></div>
+            <div id="receipts-mapping" class="mapping-panel hidden">
+              <div class="mapping-heading"><strong data-i18n="mapFields">Map the three fields</strong><span id="receipts-map-status" class="tiny-status"></span></div>
+              <div class="mapping-fields" id="receipts-fields"></div>
+              <div class="mapping-buttons"><button id="receipts-mapping-btn" data-testid="receipts-mapping-btn" class="button ai-button" type="button"><span aria-hidden="true">✧</span><span data-i18n="suggestMapping">Suggest with local AI</span></button><button id="receipts-mapping-confirm" data-testid="receipts-mapping-confirm" class="button mapping-confirm" type="button" data-i18n="confirmMapping">Confirm mapping</button></div>
+              <p id="receipts-ai-meta" class="ai-meta" aria-live="polite"></p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="scope-section" aria-labelledby="scope-heading">
+        <div class="scope-copy"><span class="scope-icon" aria-hidden="true">i</span><div><h3 id="scope-heading" data-i18n="scopeHeading">Confirm what this check can tell you.</h3><p data-i18n="scopeDescription">One order row, one payment row, the same currency per pair and the same reporting period. Multiple currencies are never totalled or converted. Split payments, refunds, fees, duplicates and currency conflicts need a person to review the context.</p><label class="scope-checkbox"><input id="confirm-assumptions" data-testid="confirm-assumptions" type="checkbox"><span data-i18n="scopeConfirm">I confirm both files use this comparison scope.</span></label></div></div>
+        <div class="run-action"><button class="button primary" id="reconcile" data-testid="reconcile" type="button" disabled><span data-i18n="runCheck">Run the check</span><span aria-hidden="true">→</span></button><p id="run-hint" data-i18n="runHint">Confirm both mappings and scope first.</p></div>
+      </section>
+
+      <section id="results" class="results-section hidden" aria-labelledby="results-heading">
+        <div class="section-heading"><div><p class="section-kicker" data-i18n="resultsKicker">03 / THE REVIEW</p><h2 id="results-heading" data-i18n="resultsHeading">Every difference has a source.</h2><p class="section-description" id="report-meta"></p></div><div class="export-actions"><a id="download-csv" data-testid="download-csv" class="button secondary" download data-i18n="exportCSV">↓ CSV report</a><a id="download-html" data-testid="download-html" class="button secondary" download data-i18n="exportHTML">↓ HTML report</a></div></div>
+        <div id="summary" class="summary-grid" data-testid="report-summary"></div>
+        <p id="currency-warning" class="notice error hidden" role="status" data-testid="currency-warning"></p>
+        <div class="review-layout">
+          <div class="findings-panel"><div class="findings-toolbar"><h3 data-i18n="findingsHeading">Reconciliation findings</h3><div id="filters" class="filters" role="group" aria-label="Filter findings"></div></div><div class="finding-table-header" aria-hidden="true"><span data-i18n="reference">Reference</span><span data-i18n="expected">Expected</span><span data-i18n="received">Received</span><span data-i18n="result">Result</span></div><div id="findings" class="findings-list" data-testid="findings-list"></div><button id="show-more" class="text-button hidden" type="button" data-i18n="showMore">Show the next 100 findings</button><p class="table-footnote" data-i18n="tableFootnote">A difference is a prompt to investigate. It is not proof of a loss, a payment, or a corrected ledger.</p></div>
+          <aside id="evidence" class="evidence-panel" aria-labelledby="evidence-heading"><div class="evidence-empty"><span aria-hidden="true">↗</span><h3 id="evidence-heading" data-i18n="evidenceHeading">Follow the evidence.</h3><p data-i18n="evidenceEmpty">Select a finding to inspect the original rows, file digests and calculation.</p></div></aside>
+        </div>
+        <section class="explain-panel"><div class="explain-heading"><span class="ai-spark" aria-hidden="true">✧</span><div><h3 data-i18n="explainHeading">Turn the evidence into a review note.</h3><p data-i18n="explainDescription">Local AI explains up to 3 differences using the computed evidence. Invalid references and structured output are rejected. AI notes still need human review.</p></div><button id="explain-report" data-testid="explain-report" class="button ai-button" type="button"><span data-i18n="explainButton">Explain with local AI</span><span aria-hidden="true">↗</span></button></div><p id="explain-meta" class="ai-meta" role="status" aria-live="polite"></p><div id="explain-items" class="explanation-list hidden"></div></section>
+      </section>
+
+      <footer class="workspace-footer"><p><span class="footer-shield" aria-hidden="true">◇</span><span data-i18n="footer">Read-only analysis. No money moves. No books are changed. Files stay with this local app; model weights are served by Ollama.</span></p><span class="footer-version">RECEIVABLE CHECK / 0.1</span></footer>
+    </main>
+  </body>
+</html>

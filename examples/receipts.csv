@@ -1,0 +1,10 @@
+Payment reference,Received,Currency,Bank memo
+SO-1001,129.00,CNY,Synthetic equal-amount pair
+SO-1002,109.00,CNY,Synthetic under-receipt pair
+SO-1003,59.90,CNY,Synthetic over-receipt pair
+SO-1005,40.00,CNY,Synthetic split part one
+SO-1005,60.00,CNY,Synthetic split part two
+SO-1006,60.00,USD,Synthetic currency mismatch
+SO-1007,12.34,CNY,Synthetic precision anomaly
+SO-1008,35.00,CNY,Synthetic equal pair despite unrelated note
+SO-1999,18.00,CNY,Synthetic receipt without corresponding order

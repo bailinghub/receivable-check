@@ -1,0 +1,17 @@
+{
+  "scope": "Synthetic gross, same-period, single-row matching. Split rows must not be merged.",
+  "documents": { "orders": 9, "receipts": 9 },
+  "byStatus": { "same": 2, "under": 1, "over": 1, "one-side-missing": 2, "duplicate": 1, "missing-key": 1, "invalid-amount": 1, "currency-mismatch": 1 },
+  "references": {
+    "SO-1001": { "status": "same", "expected": "129.00", "received": "129.00", "delta": "0.00", "orders": [2], "receipts": [2] },
+    "SO-1002": { "status": "under", "expected": "119.00", "received": "109.00", "delta": "-10.00", "orders": [3], "receipts": [3] },
+    "SO-1003": { "status": "over", "expected": "49.90", "received": "59.90", "delta": "10.00", "orders": [4], "receipts": [4] },
+    "SO-1004": { "status": "one-side-missing", "expected": "88.00", "received": null, "delta": null, "orders": [5], "receipts": [] },
+    "SO-1005": { "status": "duplicate", "expected": null, "received": null, "delta": null, "orders": [6], "receipts": [5, 6] },
+    "SO-1006": { "status": "currency-mismatch", "expected": null, "received": null, "delta": null, "orders": [7], "receipts": [7] },
+    "": { "status": "missing-key", "expected": null, "received": null, "delta": null, "orders": [8], "receipts": [] },
+    "SO-1007": { "status": "invalid-amount", "expected": null, "received": "12.34", "delta": null, "orders": [9], "receipts": [8] },
+    "SO-1008": { "status": "same", "expected": "35.00", "received": "35.00", "delta": "0.00", "orders": [10], "receipts": [9] },
+    "SO-1999": { "status": "one-side-missing", "expected": null, "received": "18.00", "delta": null, "orders": [], "receipts": [10] }
+  }
+}
